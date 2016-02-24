@@ -1,0 +1,216 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "svcPlanName": {
+            "type": "string"
+        },
+        "ftpConnectionName":{
+            "type": "string",
+            "defaultValue": "FTPConnection1"
+        },
+        "serverAddress":{
+            "type": "string"
+        },
+        "userName": {
+            "type": "string"
+        },
+        "password": {
+            "type": "securestring"
+        },
+        "port":{
+            "type": "int",
+            "defaultValue": 21
+        },
+        "ftpFolderId": {
+            "type": "string",
+            "metadata": {
+                "description": "The folder id for the FTP folder you want to monitor"
+            }
+        },
+        "blobConnectionName": {
+            "type": "string",
+            "defaultValue": "BlobConnection1"
+        },
+        "blobAccountName": {
+            "type": "string"
+        },
+        "blobAccessKey": {
+            "type": "securestring"
+        },
+        "blobContainer": {
+            "type": "string"
+        },
+        "logicAppName": {
+            "type": "string",
+            "defaultValue": "FTPtoBlob"
+        },
+        
+        "sku": {
+            "type": "string",
+            "defaultValue": "Standard",
+            "allowedValues": [
+                "Free",
+                "Basic",
+                "Standard",
+                "Premium"
+            ],
+            "metadata": {
+                "description": "The pricing tier for the logic app."
+            }
+        }
+    },
+    "variables": {
+        "$isssl": true,
+        "$isBinaryTransport": true,
+        "$disableCertificateValidation": false
+    },
+    "resources": [
+        {
+            "apiVersion": "2014-06-01",
+            "name": "[parameters('svcPlanName')]",
+            "type": "Microsoft.Web/serverfarms",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "name": "[parameters('svcPlanName')]",
+                "sku": "[parameters('sku')]",
+                "workerSize": "0",
+                "numberOfWorkers": 1
+            }
+        },
+        {
+            "type": "Microsoft.Web/connections",
+            "apiVersion": "2015-08-01-preview",
+            "location": "[resourceGroup().location]",
+            "name": "[parameters('ftpConnectionName')]",
+            "properties": {
+                "api": {
+                    "id": "[concat('subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/ftp')]"
+                },
+                "displayName": "[parameters('ftpConnectionName')]",
+                "parameterValues": {
+                    "serverAddress": "[parameters('serverAddress')]",
+                    "userName": "[parameters('userName')]",
+                    "password": "[parameters('password')]",
+                    "serverPort": "[parameters('port')]",
+                    "isssl": "[variables('$isssl')]",
+                    "isBinaryTransport": "[variables('$isBinaryTransport')]",
+                    "disableCertificateValidation": "[variables('$disableCertificateValidation')]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Web/connections",
+            "apiVersion": "2015-08-01-preview",
+            "location": "[resourceGroup().location]",
+            "name": "[parameters('blobConnectionName')]",
+            "properties": {
+                "api": {
+                    "id": "[concat('subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/azureblob')]"
+                },
+                "displayName": "[parameters('blobConnectionName')]",
+                "parameterValues": {
+                    "accountName": "[parameters('blobAccountName')]",
+                    "accessKey": "[parameters('blobAccessKey')]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2015-08-01-preview",
+            "name": "[parameters('logicAppName')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/connections', parameters('ftpConnectionName'))]",
+                "[resourceId('Microsoft.Web/connections', parameters('blobConnectionName'))]"
+            ],
+            "properties": {
+                "sku": {
+                    "name": "[parameters('sku')]",
+                    "plan": {
+                        "id": "[concat(resourceGroup().id, '/providers/Microsoft.Web/serverfarms/',parameters('svcPlanName'))]"
+                    }
+                },
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2015-08-01-preview/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "When_a_file_is_added_or_modified": {
+                            "recurrence": {
+                                "frequency": "Hour",
+                                "interval": 1
+                            },
+                            "metadata": {
+                                "[parameters('ftpFolderId')]": "/"
+                            },
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "api": {
+                                        "runtimeUrl": "[concat('https://logic-apis-', resourceGroup().location, '.azure-apim.net/apim/ftp')]"
+                                    },
+                                    "connection": {
+                                        "name": "@parameters('$connections')['ftp']['connectionId']"
+                                    }
+                                },
+                                "method": "get",
+                                "path": "/datasets/default/triggers/onupdatedfile",
+                                "queries": {
+                                    "folderId": "[parameters('ftpFolderId')]"
+                                }
+                            },
+                            "conditions": []
+                        }
+                    },
+                    "actions": {
+                        "Create_file": {
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "body": "@triggerBody()",
+                                "host": {
+                                    "api": {
+                                        "runtimeUrl": "[concat('https://logic-apis-', resourceGroup().location, '.azure-apim.net/apim/azureblob')]"
+                                    },
+                                    "connection": {
+                                        "name": "@parameters('$connections')['azureblob']['connectionId']"
+                                    }
+                                },
+                                "method": "post",
+                                "path": "/datasets/default/files",
+                                "queries": {
+                                    "folderPath": "[concat('/', parameters('blobContainer'))]",
+                                    "name": "@{triggerOutputs()['headers']['x-ms-file-name']}"
+                                }
+                            },
+                            "conditions": []
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "azureblob": {
+                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('blobConnectionName'))]",
+                                "connectionName": "[parameters('blobConnectionName')]",
+                                "id": "[reference(concat('Microsoft.Web/connections/', parameters('blobConnectionName')), '2015-08-01-preview').api.id]"
+                            },
+                            "ftp": {
+                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('ftpConnectionName'))]",
+                                "connectionName": "[parameters('ftpConnectionName')]",
+                                "id": "[reference(concat('Microsoft.Web/connections/', parameters('ftpConnectionName')), '2015-08-01-preview').api.id]"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}
