@@ -197,14 +197,14 @@
                     "$connections": {
                         "value": {
                             "azureblob": {
-                                "connectionId": "[substring(resourceId('Microsoft.Web/connections', parameters('blobConnectionName')), 1)]",
+                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('blobConnectionName'))]",
                                 "connectionName": "[parameters('blobConnectionName')]",
-                                "id": "[substring(reference(concat('Microsoft.Web/connections/', parameters('blobConnectionName')), '2015-08-01-preview').api.id, 1)]"
+                                "id": "[reference(concat('Microsoft.Web/connections/', parameters('blobConnectionName')), '2015-08-01-preview').api.id]"
                             },
                             "ftp": {
-                                "connectionId": "[substring(resourceId('Microsoft.Web/connections', parameters('ftpConnectionName')), 1)]",
+                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('ftpConnectionName'))]",
                                 "connectionName": "[parameters('ftpConnectionName')]",
-                                "id": "[substring(reference(concat('Microsoft.Web/connections/', parameters('ftpConnectionName')), '2015-08-01-preview').api.id, 1)]"
+                                "id": "[reference(concat('Microsoft.Web/connections/', parameters('ftpConnectionName')), '2015-08-01-preview').api.id]"
                             }
                         }
                     }
