@@ -1,0 +1,401 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "svcPlanName": {
+            "type": "string"
+        },
+        "logicAppName": {
+            "type": "string",
+            "defaultValue": "SyncronousResponse"
+        },
+        "sku": {
+            "type": "string",
+            "defaultValue": "Standard",
+            "allowedValues": [
+                "Free",
+                "Basic",
+                "Standard",
+                "Premium"
+            ],
+            "metadata": {
+                "description": "The pricing tier for the logic app."
+            }
+        }
+    },
+    "resources": [
+        {
+            "apiVersion": "2014-06-01",
+            "name": "[parameters('svcPlanName')]",
+            "type": "Microsoft.Web/serverfarms",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "name": "[parameters('svcPlanName')]",
+                "sku": "[parameters('sku')]",
+                "workerSize": "0",
+                "numberOfWorkers": 1
+            }
+        },
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2015-08-01-preview",          
+            "name": "[parameters('logicAppName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "state": "Enabled",
+                "sku": {
+                    "name": "[parameters('sku')]",
+                    "plan": {
+                        "id": "[concat(resourceGroup().id, '/providers/Microsoft.Web/serverfarms/',parameters('svcPlanName'))]"
+                    }
+                },
+                "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2015-08-01-preview/workflowdefinition.json#",
+    "actions": {
+    },
+    "contentVersion": "1.0.0.0",
+    "parameters": {},
+    "triggers": {
+        "manual": {
+            "inputs": {
+                "schema": {
+                    "$schema": "http://json-schema.org/draft-04/schema#",
+                    "id": "/",
+                    "properties": {
+                        "createdDate": {
+                            "id": "createdDate",
+                            "type": "string"
+                        },
+                        "detailedMessage": {
+                            "id": "detailedMessage",
+                            "properties": {
+                                "html": {
+                                    "id": "html",
+                                    "type": "string"
+                                },
+                                "markdown": {
+                                    "id": "markdown",
+                                    "type": "string"
+                                },
+                                "text": {
+                                    "id": "text",
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        "eventType": {
+                            "id": "eventType",
+                            "type": "string"
+                        },
+                        "id": {
+                            "id": "id",
+                            "type": "string"
+                        },
+                        "message": {
+                            "id": "message",
+                            "properties": {
+                                "html": {
+                                    "id": "html",
+                                    "type": "string"
+                                },
+                                "markdown": {
+                                    "id": "markdown",
+                                    "type": "string"
+                                },
+                                "text": {
+                                    "id": "text",
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        "notificationId": {
+                            "id": "notificationId",
+                            "type": "integer"
+                        },
+                        "publisherId": {
+                            "id": "publisherId",
+                            "type": "string"
+                        },
+                        "resource": {
+                            "id": "resource",
+                            "properties": {
+                                "buildNumber": {
+                                    "id": "buildNumber",
+                                    "type": "string"
+                                },
+                                "definition": {
+                                    "id": "definition",
+                                    "properties": {
+                                        "batchSize": {
+                                            "id": "batchSize",
+                                            "type": "integer"
+                                        },
+                                        "definitionType": {
+                                            "id": "definitionType",
+                                            "type": "string"
+                                        },
+                                        "id": {
+                                            "id": "id",
+                                            "type": "integer"
+                                        },
+                                        "name": "[object Object]",
+                                        "triggerType": {
+                                            "id": "triggerType",
+                                            "type": "string"
+                                        },
+                                        "url": {
+                                            "id": "url",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                },
+                                "drop": {
+                                    "id": "drop",
+                                    "properties": {
+                                        "downloadUrl": {
+                                            "id": "downloadUrl",
+                                            "type": "string"
+                                        },
+                                        "location": {
+                                            "id": "location",
+                                            "type": "string"
+                                        },
+                                        "type": {
+                                            "id": "type",
+                                            "type": "string"
+                                        },
+                                        "url": {
+                                            "id": "url",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                },
+                                "dropLocation": {
+                                    "id": "dropLocation",
+                                    "type": "string"
+                                },
+                                "finishTime": {
+                                    "id": "finishTime",
+                                    "type": "string"
+                                },
+                                "hasDiagnostics": {
+                                    "id": "hasDiagnostics",
+                                    "type": "boolean"
+                                },
+                                "id": {
+                                    "id": "id",
+                                    "type": "integer"
+                                },
+                                "lastChangedBy": {
+                                    "id": "lastChangedBy",
+                                    "properties": {
+                                        "displayName": {
+                                            "id": "displayName",
+                                            "type": "string"
+                                        },
+                                        "id": {
+                                            "id": "id",
+                                            "type": "string"
+                                        },
+                                        "imageUrl": {
+                                            "id": "imageUrl",
+                                            "type": "string"
+                                        },
+                                        "uniqueName": {
+                                            "id": "uniqueName",
+                                            "type": "string"
+                                        },
+                                        "url": {
+                                            "id": "url",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                },
+                                "log": {
+                                    "id": "log",
+                                    "properties": {
+                                        "downloadUrl": {
+                                            "id": "downloadUrl",
+                                            "type": "string"
+                                        },
+                                        "type": {
+                                            "id": "type",
+                                            "type": "string"
+                                        },
+                                        "url": {
+                                            "id": "url",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                },
+                                "queue": {
+                                    "id": "queue",
+                                    "properties": {
+                                        "id": {
+                                            "id": "id",
+                                            "type": "integer"
+                                        },
+                                        "name": "[object Object]",
+                                        "queueType": {
+                                            "id": "queueType",
+                                            "type": "string"
+                                        },
+                                        "url": {
+                                            "id": "url",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                },
+                                "reason": {
+                                    "id": "reason",
+                                    "type": "string"
+                                },
+                                "requests": {
+                                    "id": "requests",
+                                    "items": {
+                                        "id": "0",
+                                        "properties": {
+                                            "id": {
+                                                "id": "id",
+                                                "type": "integer"
+                                            },
+                                            "requestedFor": {
+                                                "id": "requestedFor",
+                                                "properties": {
+                                                    "displayName": {
+                                                        "id": "displayName",
+                                                        "type": "string"
+                                                    },
+                                                    "id": {
+                                                        "id": "id",
+                                                        "type": "string"
+                                                    },
+                                                    "imageUrl": {
+                                                        "id": "imageUrl",
+                                                        "type": "string"
+                                                    },
+                                                    "uniqueName": {
+                                                        "id": "uniqueName",
+                                                        "type": "string"
+                                                    },
+                                                    "url": {
+                                                        "id": "url",
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "url": {
+                                                "id": "url",
+                                                "type": "string"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "type": "array"
+                                },
+                                "retainIndefinitely": {
+                                    "id": "retainIndefinitely",
+                                    "type": "boolean"
+                                },
+                                "sourceGetVersion": {
+                                    "id": "sourceGetVersion",
+                                    "type": "string"
+                                },
+                                "startTime": {
+                                    "id": "startTime",
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "id": "status",
+                                    "type": "string"
+                                },
+                                "uri": {
+                                    "id": "uri",
+                                    "type": "string"
+                                },
+                                "url": {
+                                    "id": "url",
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        "resourceContainers": {
+                            "id": "resourceContainers",
+                            "properties": {
+                                "account": {
+                                    "id": "account",
+                                    "properties": {
+                                        "id": {
+                                            "id": "id",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                },
+                                "collection": {
+                                    "id": "collection",
+                                    "properties": {
+                                        "id": {
+                                            "id": "id",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                },
+                                "project": {
+                                    "id": "project",
+                                    "properties": {
+                                        "id": {
+                                            "id": "id",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        "resourceVersion": {
+                            "id": "resourceVersion",
+                            "type": "string"
+                        },
+                        "subscriptionId": {
+                            "id": "subscriptionId",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "subscriptionId",
+                        "notificationId",
+                        "id",
+                        "eventType",
+                        "publisherId",
+                        "message",
+                        "detailedMessage",
+                        "resource",
+                        "resourceVersion",
+                        "resourceContainers",
+                        "createdDate"
+                    ],
+                    "type": "object"
+                }
+            },
+            "type": "Manual"
+        }
+    }
+},
+                "parameters": {}
+            }
+        }
+    ],
+    "outputs": {}
+}
