@@ -140,7 +140,7 @@
                                             "id": "id",
                                             "type": "integer"
                                         },
-                                        "name": "[object Object]",
+                                        "name": "[[object Object]",
                                         "triggerType": {
                                             "id": "triggerType",
                                             "type": "string"
@@ -241,7 +241,7 @@
                                             "id": "id",
                                             "type": "integer"
                                         },
-                                        "name": "[object Object]",
+                                        "name": "[[object Object]",
                                         "queueType": {
                                             "id": "queueType",
                                             "type": "string"
