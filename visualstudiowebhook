@@ -7,7 +7,7 @@
         },
         "logicAppName": {
             "type": "string",
-            "defaultValue": "SyncronousResponse"
+            "defaultValue": "VisualStudioTrigger"
         },
         "sku": {
             "type": "string",
